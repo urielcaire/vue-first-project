@@ -1,6 +1,6 @@
-# vue-project
+# vue-first-project
 
-> Primeiro projeto com VueJS
+> Primeiro projeto com VueJS.
 
 ## Build Setup
 

@@ -35,9 +35,12 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="issue in issues" :key="issue.number">
+        <tr v-if="!!issues.length" v-for="issue in issues" :key="issue.number">
           <td>{{ issue.number }}</td>
           <td>{{ issue.title }}</td>
+        </tr>
+        <tr v-if="!!!issues.length">
+          <td colspan="2" class="text-center">Nenhuma issue encontrada!</td>
         </tr>
       </tbody>
     </table>
