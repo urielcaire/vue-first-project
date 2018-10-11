@@ -1,6 +1,6 @@
 # vue-first-project
 
-> Primeiro projeto com VueJS.
+> Primeiro projeto com VueJS. Uma aplicação simples para listar ISSUES de repositórios do GitHub.
 
 ## Build Setup
 
