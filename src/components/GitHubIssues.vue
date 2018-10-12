@@ -20,14 +20,23 @@
       <div class="col-3">
         <div class="form-group">
           <button @click.prevent.stop="getIssues()"
-                  class="btn btn-success">GO</button>
+                  class="btn btn-success">
+                  <span v-if="loader.getIssues">
+                      <img src="/static/loading.svg" alt="">
+                  </span>GO</button>
           <button @click.prevent.stop="reset()"
                   class="btn btn-danger">LIMPAR</button>
         </div>
       </div>
     </div>
     <br><hr><br>
-    <table class="table table-sm table-bordered">
+    <template v-if="selectedIssue.id">
+        <h2>{{ selectedIssue.title }}</h2>
+        <p>{{ selectedIssue.body }}</p>
+        <a  @click.prevent.stop="clearIssue()"
+            href="#">Voltar</a>
+    </template>
+    <table v-if="!selectedIssue.id" class="table table-sm table-bordered">
       <thead>
         <tr>
           <th width="100">Número</th>
@@ -39,10 +48,17 @@
           <td colspan="2" class="text-center"> <img src="/static/loading.svg" alt=""> </td>
         </tr>
         <tr v-if="!!issues.length && !loader.getIusses" v-for="issue in issues" :key="issue.number">
-          <td>{{ issue.number }}</td>
+          <td>
+            <a  @click.prevent.stop="getIssue(issue)"
+                href="#">{{ issue.number }}
+                <span v-if="issue.is_loading">
+                  <img src="/static/loading.svg" alt="">
+                </span>
+            </a>
+          </td>
           <td>{{ issue.title }}</td>
         </tr>
-        <tr v-if="!!!issues.length && !loader.getIusses">
+        <tr v-if="!!!issues.length && !loader.getIssues">
           <td colspan="2" class="text-center">Nenhuma issue encontrada!</td>
         </tr>
       </tbody>
@@ -61,8 +77,10 @@ export default{
       username: '',
       repository: '',
       issues: [],
+      selectedIssue: {},
       loader: {
         getIssues: false,
+        getIssue: false,
       },
     };
   },
@@ -74,6 +92,7 @@ export default{
     getIssues() {
       if (this.username && this.repository) {
         this.loader.getIssues = true;
+        this.selectedIssue = {};
         const url = `https://api.github.com/repos/${this.username}/${this.repository}/issues`;
         axios.get(url).then((response) => {
           this.issues = response.data;
@@ -81,6 +100,22 @@ export default{
           this.loader.getIssues = false;
         });
       }
+    },
+    getIssue(issue) {
+      if (this.username && this.repository) {
+        this.loader.getIssue = true;
+        this.$set(issue, 'is_loading', true);
+        const url = `https://api.github.com/repos/${this.username}/${this.repository}/issues/${issue.number}`;
+        axios.get(url).then((response) => {
+          this.selectedIssue = response.data;
+        }).finally(() => {
+          this.loader.getIssue = false;
+          this.$set(issue, 'is_loading', false);
+        });
+      }
+    },
+    clearIssue() {
+      this.selectedIssue = {};
     },
   },
 };
