@@ -30,13 +30,7 @@
       </div>
     </div>
     <br><hr><br>
-    <template v-if="selectedIssue.id">
-        <h2>{{ selectedIssue.title }}</h2>
-        <p>{{ selectedIssue.body }}</p>
-        <a  @click.prevent.stop="clearIssue()"
-            href="#">Voltar</a>
-    </template>
-    <table v-if="!selectedIssue.id" class="table table-sm table-bordered">
+    <table class="table table-sm table-bordered">
       <thead>
         <tr>
           <th width="100">Número</th>
@@ -49,12 +43,14 @@
         </tr>
         <tr v-if="!!issues.length && !loader.getIusses" v-for="issue in issues" :key="issue.number">
           <td>
-            <a  @click.prevent.stop="getIssue(issue)"
-                href="#">{{ issue.number }}
-                <span v-if="issue.is_loading">
-                  <img src="/static/loading.svg" alt="">
-                </span>
-            </a>
+            <router-link  :to="{  name: 'GitHubIssue',
+                                  params: {
+                                    username: username,
+                                    repository: repository,
+                                    issue: issue.number
+                                }}">
+              {{ issue.number }}
+            </router-link>
           </td>
           <td>{{ issue.title }}</td>
         </tr>
@@ -72,15 +68,16 @@ import axios from 'axios';
 
 export default{
   name: 'GitHubIssues',
+  created() {
+    this.getLocalData();
+  },
   data() {
     return {
       username: '',
       repository: '',
       issues: [],
-      selectedIssue: {},
       loader: {
         getIssues: false,
-        getIssue: false,
       },
     };
   },
@@ -88,11 +85,13 @@ export default{
     reset() {
       this.username = '';
       this.repository = '';
+      this.issues = [];
+      localStorage.clear();
     },
     getIssues() {
       if (this.username && this.repository) {
+        localStorage.setItem('gitHubIssues', JSON.stringify({ username: this.username, repository: this.repository }));
         this.loader.getIssues = true;
-        this.selectedIssue = {};
         const url = `https://api.github.com/repos/${this.username}/${this.repository}/issues`;
         axios.get(url).then((response) => {
           this.issues = response.data;
@@ -101,21 +100,13 @@ export default{
         });
       }
     },
-    getIssue(issue) {
-      if (this.username && this.repository) {
-        this.loader.getIssue = true;
-        this.$set(issue, 'is_loading', true);
-        const url = `https://api.github.com/repos/${this.username}/${this.repository}/issues/${issue.number}`;
-        axios.get(url).then((response) => {
-          this.selectedIssue = response.data;
-        }).finally(() => {
-          this.loader.getIssue = false;
-          this.$set(issue, 'is_loading', false);
-        });
+    getLocalData() {
+      const localData = JSON.parse(localStorage.getItem('gitHubIssues'));
+      if (localStorage.getItem('gitHubIssues')) {
+        this.username = localData.username;
+        this.repository = localData.repository;
+        this.getIssues();
       }
-    },
-    clearIssue() {
-      this.selectedIssue = {};
     },
   },
 };
